@@ -3,100 +3,78 @@ import {useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet/dist/leaflet'
 import zipcodeData from '../pages/mapData/Zip and Tract/pitt.json'
-import tractData from '../pages/mapData//Zip and Tract/1980.json'
-import geo2020 from '../pages/mapData/Geojson/2020_zipCode.json'
+import tractData from '../pages/mapData//Zip and Tract/tract1980.json'
+import geo2022 from '../pages/mapData/Geojson/geo2022.json'
 import geo1980 from '../pages/mapData/Geojson/geo1980.json'
-import Legend from '../pages/mapData/Legend'
 import '../App.css'
 import FAQ from './mapData/Info/faqMain'
-const center = [40.44, -79.99]
-export default function Map() { 
+import L from "leaflet";
+import '../pages/mapData/legend.css'
 
-    const [map, setMap] = useState(null)
-    const table = []
-    
-    // add 2022 map data with layer control
-    for(let key in zipcodeData){
-      table.push(<LayersControl.BaseLayer key = {key} checked name = {key}>
-          <GeoJSON  style={{color:"black"}}  data= {pittZips()} onEachFeature= {onEachZipCodeCloser(zipcodeData[key])}/>         
-      </LayersControl.BaseLayer> )   
-    }
-     
-    // add 1980 map data with a layer control
-    for(let key in tractData){
-      table.push(<LayersControl.BaseLayer key = {key} checked={false} name = {key}> 
-        < GeoJSON  data= {geo1980} onEachFeature={onEachTract(tractData[key])} />          
-      </LayersControl.BaseLayer> )  
+const center = [40.44, -79.99]
+
+export default function Map() { 
+  const [map, setMap] = useState(null)
+    const table = addToLayers()
+    function mapHandler(map){
+      setMap(map.target)
+      Legend(map.target)
     }
     return ( 
       <div>
         <FAQ />
-        <MapContainer center={center} zoom={11} scrollWheelZoom={false}  whenReady={(map) =>{setMap(map.target)}}  >
+        <MapContainer center={center} zoom={11} scrollWheelZoom={false}  whenReady={(map) =>{mapHandler(map)}}  >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LayersControl position="topright" style={{width: "100px"}} >                                         
             {table}
-          </LayersControl>  
-        <Legend map={map} data ={getColor} />
+          </LayersControl>    
       </MapContainer>
       </div>
-      
     )
   } 
-
-function pittZips(){
-    const zips = [15201,15122,15202,15203,15204,15205,15206,15207,15208,15209,15210,15211,15212,15213,15214,15215,15216,15217,15218,15219,15220,15221,15222,15223,15224,15225,15226,15227,15228,15229,15230,15231,15232,15233,15234,15235,15236,15237,15238,15239,15240,15241,15242,15243,15244,15250,15251,15260,15264,15272,15274,15275,15276,15290,15295]
-    const pittsburghData = []
-    for(let i=1; i < geo2020.features.length; i++){
-      let zipcode = parseInt(geo2020.features[i].properties["ZCTA5CE10"])
-      if (zips.includes(zipcode)){
-          pittsburghData.push(geo2020.features[i])
-      }
-    }
-    return pittsburghData
-  }
 
 // adds the colors based on population for each zip code region
 function onEachZipCodeCloser(data){
   return function onEachFeature(feature,layer){
-    Object.entries(data).forEach((entry) => {
-      let [zip, value] = entry;
-      value = value.toString().replaceAll(',','')
-      if(feature.properties.ZCTA5CE10 == zip){
+      const zip = feature.properties.ZCTA5CE10
+      let population = data[zip]
+      if(population){
+        population = population.toString().replaceAll(',','')
         layer.setStyle({
-          fillColor: getColor(value),
+          fillColor: getColor(population),
           weight: 1,
           opacity: .5,
           color: 'black',
           dashArray: '3',
           fillOpacity: 0.7,
           })
-          layer.bindPopup("Zip Code: "+zip,{autoClose:false, closeOnClick:false});
+          layer.bindPopup("Zip Code: "+zip,{autoClose:false, closeOnClick:false}); 
       }
-    });
+    }
   }
-}
+
+  
 // adds the colors based on population for each tract region
 function onEachTract(data){
   return function onEachFeature(feature,layer){
-    Object.entries(data).forEach((entry) => {
-      let [tract, pop] = entry;
-      pop = pop.toString().replaceAll(',','')
-      if(feature.properties.tract == tract){
+      const tract = feature.properties.tract
+      let population = data[tract]
+      population = population.toString().replaceAll(',','')
         layer.setStyle({
          color: "black",
          fill:true,
-         fillColor: getColor(pop),
+         fillColor: getColor(population),
          fillOpacity: .7,
-       })
+        })
+       
        layer.bindPopup("Census Tract: "+tract, {autoClose:false, closeOnClick:false});
-      } 
-    });
-    
-  }
+      }
 }
+
+// gets color based on population size
 function getColor(d) {
   return d > 30000 ?'#4D201E':
         d > 20000 ?'#77322E':
@@ -110,9 +88,47 @@ function getColor(d) {
         "#C2D7F2"  
 }
   
+//Add All map data to the layer Control
+function addToLayers(){
+   // add 2022 map data
+   const table= []
+   
+   for(let key in zipcodeData){
+    table.push(<LayersControl.BaseLayer key = {key} checked={true} name = {key}>
+        <GeoJSON  style={{color:"black"}}  data= {geo2022} onEachFeature= {onEachZipCodeCloser(zipcodeData[key])}/>         
+    </LayersControl.BaseLayer> )   
+  }
+   
+  // add 1980 map data 
+  for(let key in tractData){
+    table.push(<LayersControl.BaseLayer key = {key} checked={false} name = {key}> 
+      < GeoJSON  data= {geo1980} onEachFeature={onEachTract(tractData[key])} />          
+    </LayersControl.BaseLayer> )  
+  }
+  return table
+}
 
-
-
-
+// Legend of map added when map object is ready
+function Legend(map) {
+        const legend = L.control({ position: "bottomright" });
+        legend.onAdd = function () {
+          const div = L.DomUtil.create('div', 'info legend'),
+          grades = [0,100,500,1000,2500,5000,7500,10000,20000,30000]
+          div.innerHTML = '<span> Population per Area</span>'
+          for (var i = 0; i < grades.length; i++) {
+            const color = getColor(grades[i] + 1)
+            let second=""
+            const first = grades[i].toLocaleString("en-US").toString()
+            if (i + 1 < grades.length){
+              second = grades[i+1].toLocaleString("en-US").toString()
+            }
+            div.innerHTML +=
+                '<i style="background:' + color + '"></i> ' +
+                first + (second ? '&ndash;' + second + '<br>' : '+');
+          }
+          return div;
+        }
+          legend.addTo(map);
+} 
  
 

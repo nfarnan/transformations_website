@@ -1,5 +1,7 @@
+
 function Home() { 
     return ( 
+        
        <div className="home"> 
             <div className="page-title">
                 <h1>The Pittsburgh Transformations Project: Race, Migration, Education, and Healthcare</h1> 

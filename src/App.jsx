@@ -1,31 +1,30 @@
-// import './App.css'
+import './App.css'
 import React from 'react';
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom'
-import Home from './pages/Home.jsx'
+import {HashRouter as Router,Route,Routes} from 'react-router-dom'
+import {createBrowserHistory} from 'history';
+import Home from './pages/Home'
+import Media from './pages/Media'
 import Map from './pages/Maps'
 import Timeline from './pages/Timeline'
-import Media from './pages/Media'
-import Layout from './pages/Layout'
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path='/' element={<Layout />}>
-      <Route index element= {<Home />} />
-      <Route path='Map' element={<Map />} />
-      <Route path='Timeline' element={<Timeline />} />
-      <Route path='Media' element={<Media />} />
-    </Route>
-  )
-);
-
+import Navbar from './pages/Navbar'
+import Footer from './pages/Footer'
 function App() {
-
-  return (
-    <>
-
-      <RouterProvider router={router}/>
-    </>
-  )
+    return(
+      <Router history={createBrowserHistory} >
+        <div className="Layout">
+          <Navbar />
+          <div className="outlet">
+            <Routes>
+              <Route path='/' element={<Home />}/>
+              <Route path="/map" element={<Map />} />
+              <Route path="/timeline" element={<Timeline />} />
+              <Route path="/media" element={<Media />} />
+            </Routes>
+          </div>
+          <Footer />
+        </div>
+      </Router>
+    )
 }
 
 export default App;

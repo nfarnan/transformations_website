@@ -1,8 +1,4 @@
-# Transformations Project website
-
-A website for the Pitt Transformations Project, made with React and Vite
-
-### React + Vite
+# React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
